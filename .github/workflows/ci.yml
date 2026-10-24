@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift version
+        run: swift --version
+      - name: Build
+        run: swift build -c release
+      - name: Test
+        run: swift test
+      - name: Smoke test on the samples
+        run: |
+          .build/release/vision-ocr examples/sample.png | tee out.txt
+          grep -q "PUBLIC NOTICE" out.txt
+          .build/release/vision-ocr --format json examples/sample.pdf | python3 -c 'import json,sys; d=json.load(sys.stdin); assert len(d[0]["pages"]) == 2'
